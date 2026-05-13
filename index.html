@@ -1,113 +1,47 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sterile Factory Dashboard 2026</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root{--bg:#f3f6fb;--card:#fff;--ink:#0f172a;--muted:#64748b;--blue:#2563eb;--green:#10b981;--purple:#8b5cf6;--amber:#f59e0b}
-    *{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--ink)}
-    .wrap{max-width:1280px;margin:auto;padding:20px}
-    .hero{background:linear-gradient(135deg,#020617,#1e3a8a,#0891b2);color:#fff;border-radius:28px;padding:24px;margin-bottom:18px;box-shadow:0 20px 45px #0f172a22}
-    .hero h1{margin:0;font-size:clamp(24px,4vw,42px)} .hero p{opacity:.88}
-    .upload{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:18px}
-    button,.fileLabel{border:0;border-radius:16px;background:#fff;color:#1e3a8a;padding:13px 16px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px #0002}
-    input[type=file]{display:none}
-    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .card{background:var(--card);border-radius:24px;padding:18px;box-shadow:0 6px 20px #0f172a12;border:1px solid #e2e8f0}
-    .kpi .label{font-size:13px;color:var(--muted)} .kpi .value{font-size:34px;font-weight:900;margin-top:6px}
-    .kpi .sub{font-size:12px;color:var(--muted)}
-    h2{font-size:18px;margin:0 0 14px}.note{font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:18px;padding:14px;margin:14px 0}
-    canvas{width:100%!important;max-height:360px}
-    table{width:100%;border-collapse:collapse;font-size:13px} th{background:#0f172a;color:#fff} th,td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:right} th:first-child,td:first-child{text-align:left}
-    @media(max-width:900px){.grid4,.grid2{grid-template-columns:1fr}.wrap{padding:12px}.hero{border-radius:20px}.card{border-radius:18px}.kpi .value{font-size:28px}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <section class="hero">
-      <h1>Sterile Factory Dashboard 2026</h1>
-      <p>Dashboard สำหรับดูรอบอบฆ่าเชื้อ PP / NDC / Mixed Chamber จากไฟล์ Excel และใช้งานบนมือถือได้</p>
-      <div class="upload">
-        <label class="fileLabel">Upload Excel <input id="file" type="file" accept=".xlsx,.xls"></label>
-        <button onclick="resetDemo()">Reset Demo</button>
-        <span id="status">ใช้ข้อมูลตัวอย่างเริ่มต้น</span>
-      </div>
-    </section>
-
-    <section class="grid4">
-      <div class="card kpi"><div class="label">รอบอบฆ่าเชื้อทั้งหมด</div><div class="value" id="kTotal">0</div><div class="sub">Cycle / Chamber</div></div>
-      <div class="card kpi"><div class="label">รอบที่มีงาน PP</div><div class="value" id="kPP">0</div><div class="sub">รวมอบรวม</div></div>
-      <div class="card kpi"><div class="label">รอบที่มีงาน NDC</div><div class="value" id="kNDC">0</div><div class="sub">รวมอบรวม</div></div>
-      <div class="card kpi"><div class="label">ตู้ที่อบรวม</div><div class="value" id="kMixed">0</div><div class="sub">PP + NDC</div></div>
-    </section>
-
-    <div class="note">หมายเหตุ: ถ้ามีข้อมูลใหม่ ให้กด Upload Excel ไฟล์ล่าสุด Dashboard จะคำนวณใหม่ทันที</div>
-
-    <section class="grid2">
-      <div class="card"><h2>รอบอบฆ่าเชื้อรายเดือน</h2><canvas id="cycleChart"></canvas></div>
-      <div class="card"><h2>PP / NDC / Mixed รายเดือน</h2><canvas id="supplierChart"></canvas></div>
-      <div class="card"><h2>ตู้ที่อบรวมและพาเลทประมาณการ</h2><canvas id="mixedChart"></canvas></div>
-      <div class="card"><h2>สรุปภาพรวมรายเดือน</h2><div style="overflow:auto"><table id="summaryTable"></table></div></div>
-    </section>
-  </div>
-
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sterile Factory Dashboard 2026 Full V2</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#eef3f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--blue:#2563eb;--green:#10b981;--purple:#8b5cf6;--amber:#f59e0b;--red:#ef4444;--line:#dbe3ef}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1440px;margin:auto;padding:18px}.hero{background:linear-gradient(135deg,#07112f,#1d4ed8,#0891b2);color:#fff;border-radius:28px;padding:26px;margin-bottom:18px;box-shadow:0 20px 45px #0f172a28}
+h1{margin:0;font-size:clamp(26px,4vw,44px)}.hero p{opacity:.9;line-height:1.7}.toolbar,.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}
+button,.fileLabel{border:0;border-radius:16px;background:#fff;color:#1e3a8a;padding:13px 16px;font-weight:900;cursor:pointer;box-shadow:0 8px 20px #0002}.ghost{background:#eaf2ff}.control{border:1px solid #cbd5e1;border-radius:12px;padding:10px;max-width:130px}
+input[type=file]{display:none}.status{font-weight:700;font-size:13px;color:#dbeafe}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.card{background:var(--card);border-radius:24px;padding:18px;box-shadow:0 6px 20px #0f172a12;border:1px solid var(--line)}.kpi .label{font-size:13px;color:var(--muted);font-weight:700}.kpi .value{font-size:34px;font-weight:1000;margin-top:8px;letter-spacing:-.03em}.kpi .sub{font-size:12px;color:var(--muted);font-weight:700}
+h2{font-size:18px;margin:0 0 14px}.badge{border-radius:999px;background:#ecfeff;color:#0e7490;padding:5px 10px;font-size:12px;font-weight:900}.note{font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:18px;padding:14px;margin:14px 0;line-height:1.7}
+.chartBox{height:350px}canvas{width:100%!important;height:100%!important}.tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line);max-height:520px}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#0f172a;color:#fff;position:sticky;top:0}th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}
+.topList{display:grid;gap:10px}.topItem{display:grid;grid-template-columns:36px 1fr 84px;gap:10px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:12px}.rank{width:32px;height:32px;border-radius:999px;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:1000}.code{font-weight:1000}.name{color:#64748b;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.num{text-align:right;font-weight:1000;font-size:22px}.unit{text-align:right;color:#64748b;font-size:11px;font-weight:800}.insight{background:linear-gradient(135deg,#2563eb,#06b6d4);color:white}.insight p{line-height:1.9;margin:0;color:#eff6ff}.small{font-size:12px;color:#64748b;margin-top:6px}
+@media(max-width:1000px){.grid4,.grid2{grid-template-columns:1fr}.wrap{padding:10px}.hero{border-radius:20px;padding:20px}.card{border-radius:18px}.kpi .value{font-size:28px}.chartBox{height:300px}.topItem{grid-template-columns:32px 1fr 72px}.controls label{width:100%}.control{width:100%;max-width:none}button,.fileLabel{width:100%;text-align:center}}
+</style></head>
+<body><div class="wrap">
+<section class="hero"><h1>🏭 Sterile Factory Dashboard 2026</h1><p>Dashboard แบบเต็มสำหรับดูรอบอบฆ่าเชื้อ PP / NDC / Mixed Chamber, Top 10 Products โดยไม่รวม Dummy, Pallet Analysis, Target % และ Data Insight</p>
+<div class="toolbar"><label class="fileLabel">📤 Upload Excel <input id="file" type="file" accept=".xlsx,.xls"></label><button class="ghost" onclick="resetDemo()">Reset Demo</button><span class="status" id="status">ใช้ข้อมูลตัวอย่างเริ่มต้น</span></div>
+<div class="controls"><label>🎯 เป้าหมายรอบ/ปี <input class="control" id="targetInput" type="number" value="1200" min="1" onchange="redrawCurrent()"></label><label>📦 Pallet/ตู้ <input class="control" id="palletInput" type="number" value="6" min="1" onchange="recalcFromStored()"></label></div></section>
+<section class="grid4"><div class="card kpi"><div class="label">รอบอบฆ่าเชื้อทั้งหมด</div><div class="value" id="kTotal">0</div><div class="sub">Cycle / Chamber</div></div><div class="card kpi"><div class="label">รอบที่มีงาน PP</div><div class="value" id="kPP">0</div><div class="sub">รวม PP ล้วน + อบรวม</div></div><div class="card kpi"><div class="label">รอบที่มีงาน NDC</div><div class="value" id="kNDC">0</div><div class="sub">รวม NDC ล้วน + อบรวม</div></div><div class="card kpi"><div class="label">ความสำเร็จเทียบเป้าหมาย</div><div class="value" id="kTarget">0%</div><div class="sub" id="kTargetSub">Target</div></div></section>
+<div class="note">หมายเหตุ: ระบบจะตัดสินค้าที่มีรหัส/ชื่อเป็น <b>Dummy</b> ออกจาก Top 10 PP และ Top 10 NDC เพราะเป็นสินค้าที่ใส่เพื่อให้ครบตู้ ไม่ใช่สินค้าหลักในการวิเคราะห์ยอดนิยม</div>
+<section class="grid2"><div class="card"><h2>📊 1) รอบอบฆ่าเชื้อรายเดือน <span class="badge">Monthly Cycle</span></h2><div class="chartBox"><canvas id="cycleChart"></canvas></div></div><div class="card"><h2>🏷️ 2) PP / NDC / Mixed รายเดือน <span class="badge">Supplier Split</span></h2><div class="chartBox"><canvas id="supplierChart"></canvas></div></div><div class="card"><h2>🔀 3) ตู้อบรวมและพาเลทประมาณการ <span class="badge">Mixed Chamber</span></h2><div class="chartBox"><canvas id="mixedChart"></canvas></div></div><div class="card"><h2>🎯 4) เป้าหมายสะสมรายเดือน <span class="badge">Target Tracking</span></h2><div class="chartBox"><canvas id="targetChart"></canvas></div></div></section>
+<section class="grid2"><div class="card"><h2>🏆 Top 10 PP / TG <span class="badge">No Dummy</span></h2><div class="topList" id="topPP"></div><div class="small">ไม่รวม Dummy</div></div><div class="card"><h2>🏆 Top 10 NDC <span class="badge">No Dummy</span></h2><div class="topList" id="topNDC"></div><div class="small">ไม่รวม Dummy</div></div></section>
+<section class="grid2"><div class="card"><h2>📋 ตารางสรุปภาพรวมรายเดือน</h2><div class="tableWrap"><table id="summaryTable"></table></div></div><div class="card insight"><h2>💡 Data Insight</h2><p id="insightText"></p></div></section>
+</div>
 <script>
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DEMO=[
- {month:'Jan',totalCycles:114,ppOnly:68,ndcOnly:37,mixed:9,ppCyclesInclMixed:77,ndcCyclesInclMixed:46,ppPalletMixed:31.7,ndcPalletMixed:22.3,mixedPalletTotal:54},
- {month:'Feb',totalCycles:127,ppOnly:73,ndcOnly:49,mixed:5,ppCyclesInclMixed:78,ndcCyclesInclMixed:54,ppPalletMixed:15,ndcPalletMixed:15,mixedPalletTotal:30},
- {month:'Mar',totalCycles:147,ppOnly:92,ndcOnly:49,mixed:6,ppCyclesInclMixed:98,ndcCyclesInclMixed:55,ppPalletMixed:22.9,ndcPalletMixed:13.1,mixedPalletTotal:36},
- {month:'Apr',totalCycles:124,ppOnly:73,ndcOnly:44,mixed:7,ppCyclesInclMixed:80,ndcCyclesInclMixed:51,ppPalletMixed:27.5,ndcPalletMixed:14.5,mixedPalletTotal:42},
- ...MONTHS.slice(4).map(m=>({month:m,totalCycles:0,ppOnly:0,ndcOnly:0,mixed:0,ppCyclesInclMixed:0,ndcCyclesInclMixed:0,ppPalletMixed:0,ndcPalletMixed:0,mixedPalletTotal:0}))
-];
-let charts=[];
-function normSup(v){v=String(v||'').trim().toUpperCase(); if(v==='TG'||v==='PP')return 'PP'; if(v==='NDC')return 'NDC'; return v||'UNKNOWN'}
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let charts=[],lastLines=null,lastPayload=null;
+function normSup(v){v=String(v||'').trim().toUpperCase();if(v==='TG'||v==='PP')return'PP';if(v==='NDC')return'NDC';return v||'UNKNOWN'}
 function monthFromName(n){return MONTHS.find(m=>String(n||'').trim().toLowerCase().startsWith(m.toLowerCase()))}
-function parseWorkbook(wb){
- const lines=[];
- wb.SheetNames.filter(monthFromName).forEach(sn=>{
-  const month=monthFromName(sn), rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
-  let batch=null, supplier=null;
-  rows.slice(5).forEach(r=>{
-   if(r[0]!=null && r[0]!=='' && !isNaN(Number(r[0]))) batch=Number(r[0]);
-   if(r[4]!=null && r[4]!=='') supplier=normSup(r[4]);
-   const code=r[6], qty=Number(r[9]);
-   if(month&&batch&&code&&!isNaN(qty)) lines.push({month,batch,supplier,code:String(code),qty});
-  });
- });
- const bmap={};
- lines.forEach(l=>{const k=l.month+'::'+l.batch; (bmap[k]??={month:l.month,batch:l.batch,lines:[]}).lines.push(l)});
- const batches=Object.values(bmap).map(b=>{
-  const pp=b.lines.filter(x=>x.supplier==='PP'), ndc=b.lines.filter(x=>x.supplier==='NDC');
-  const type=pp.length&&ndc.length?'Mixed':pp.length?'PP':ndc.length?'NDC':'Other';
-  const totalLines=pp.length+ndc.length||1;
-  return {month:b.month,type,ppLines:pp.length,ndcLines:ndc.length,ppPallet:type==='Mixed'?6*pp.length/totalLines:0,ndcPallet:type==='Mixed'?6*ndc.length/totalLines:0};
- });
- return MONTHS.map(month=>{
-  const bs=batches.filter(b=>b.month===month), mixed=bs.filter(b=>b.type==='Mixed');
-  return {
-   month,totalCycles:bs.length,ppOnly:bs.filter(b=>b.type==='PP').length,ndcOnly:bs.filter(b=>b.type==='NDC').length,mixed:mixed.length,
-   ppCyclesInclMixed:bs.filter(b=>b.ppLines>0).length,ndcCyclesInclMixed:bs.filter(b=>b.ndcLines>0).length,
-   ppPalletMixed:+mixed.reduce((s,b)=>s+b.ppPallet,0).toFixed(1),ndcPalletMixed:+mixed.reduce((s,b)=>s+b.ndcPallet,0).toFixed(1),mixedPalletTotal:mixed.length*6
-  }
- });
-}
-function draw(data){
- charts.forEach(c=>c.destroy()); charts=[];
- const total=data.reduce((s,x)=>s+x.totalCycles,0), pp=data.reduce((s,x)=>s+x.ppCyclesInclMixed,0), ndc=data.reduce((s,x)=>s+x.ndcCyclesInclMixed,0), mixed=data.reduce((s,x)=>s+x.mixed,0);
- kTotal.textContent=total.toLocaleString(); kPP.textContent=pp.toLocaleString(); kNDC.textContent=ndc.toLocaleString(); kMixed.textContent=mixed.toLocaleString();
- const labels=data.map(x=>x.month);
- charts.push(new Chart(cycleChart,{type:'bar',data:{labels,datasets:[{label:'รอบรวม',data:data.map(x=>x.totalCycles),backgroundColor:'#2563eb'}]},options:{plugins:{legend:{display:false}},responsive:true}}));
- charts.push(new Chart(supplierChart,{type:'bar',data:{labels,datasets:[{label:'PP ล้วน',data:data.map(x=>x.ppOnly),backgroundColor:'#10b981'},{label:'NDC ล้วน',data:data.map(x=>x.ndcOnly),backgroundColor:'#8b5cf6'},{label:'อบรวม',data:data.map(x=>x.mixed),backgroundColor:'#f59e0b'}]},options:{scales:{x:{stacked:true},y:{stacked:true}},responsive:true}}));
- charts.push(new Chart(mixedChart,{type:'line',data:{labels,datasets:[{label:'ตู้ที่อบรวม',data:data.map(x=>x.mixed),borderColor:'#f59e0b',backgroundColor:'#f59e0b'},{label:'PP pallet',data:data.map(x=>x.ppPalletMixed),borderColor:'#10b981',backgroundColor:'#10b981'},{label:'NDC pallet',data:data.map(x=>x.ndcPalletMixed),borderColor:'#8b5cf6',backgroundColor:'#8b5cf6'}]},options:{responsive:true}}));
- summaryTable.innerHTML='<thead><tr><th>เดือน</th><th>รวม</th><th>PP</th><th>NDC</th><th>อบรวม</th><th>Mixed Pallet</th></tr></thead><tbody>'+data.map(r=>`<tr><td>${r.month}</td><td>${r.totalCycles}</td><td>${r.ppCyclesInclMixed}</td><td>${r.ndcCyclesInclMixed}</td><td>${r.mixed}</td><td>${r.mixedPalletTotal}</td></tr>`).join('')+'</tbody>';
-}
-function resetDemo(){draw(DEMO); status.textContent='ใช้ข้อมูลตัวอย่างเริ่มต้น'}
-file.addEventListener('change',async e=>{const f=e.target.files[0]; if(!f)return; const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true}); draw(parseWorkbook(wb)); status.textContent='อัปเดตจากไฟล์: '+f.name});
-draw(DEMO);
-</script>
-</body>
-</html>
+function isDummy(code,name){return String(code||'').toUpperCase().includes('DUMMY')||String(name||'').toUpperCase().includes('DUMMY')}
+function demoLines(){let out=[];[['Jan',114,68,37,9],['Feb',127,73,49,5],['Mar',147,92,49,6],['Apr',124,73,44,7]].forEach(a=>{let [m,t,pp,ndc,mix]=a;for(let i=1;i<=t;i++){let s=i<=pp?'PP':i<=pp+ndc?'NDC':'MIX';let codes=s==='NDC'?['CB035V5S','CB035V10S','CT613V5S','TN812VS','DS-0101','GP4408V5S','CT613V10S','ABW1515S5','CB100V5S','DUMMY-NDC','TN1212VS']:['Dummy','D7-AEON-2','FC14S','DS-0201','DF-NAN','AB1212','GP4488','DSS-TND','Z-GP4412','SCSET01','PK-DRESS'];out.push({month:m,batch:i,supplier:s,code:codes[i%codes.length],name:codes[i%codes.length].includes('Dummy')?'Dummy Product':'Demo Product',qty:100});}});return out}
+function makeFromLines(lines){lastLines=lines;const pallet=Number(palletInput.value||6),batchMap={};lines.forEach(l=>{let k=l.month+'::'+l.batch;if(!batchMap[k])batchMap[k]={month:l.month,batch:l.batch,lines:[]};if(l.supplier==='MIX'){batchMap[k].lines.push({...l,supplier:'PP',qty:l.qty/2});batchMap[k].lines.push({...l,supplier:'NDC',qty:l.qty/2});}else batchMap[k].lines.push(l);});const batches=Object.values(batchMap).map(b=>{const pp=b.lines.filter(x=>x.supplier==='PP'),ndc=b.lines.filter(x=>x.supplier==='NDC'),type=pp.length&&ndc.length?'Mixed':pp.length?'PP':ndc.length?'NDC':'Other',tl=pp.length+ndc.length||1;return{month:b.month,type,ppLines:pp.length,ndcLines:ndc.length,ppPallet:type==='Mixed'?pallet*pp.length/tl:0,ndcPallet:type==='Mixed'?pallet*ndc.length/tl:0};});const monthly=MONTHS.map(month=>{const bs=batches.filter(b=>b.month===month),mix=bs.filter(b=>b.type==='Mixed');return{month,totalCycles:bs.length,ppOnly:bs.filter(b=>b.type==='PP').length,ndcOnly:bs.filter(b=>b.type==='NDC').length,mixed:mix.length,ppCyclesInclMixed:bs.filter(b=>b.ppLines>0).length,ndcCyclesInclMixed:bs.filter(b=>b.ndcLines>0).length,ppPalletMixed:+mix.reduce((s,b)=>s+b.ppPallet,0).toFixed(1),ndcPalletMixed:+mix.reduce((s,b)=>s+b.ndcPallet,0).toFixed(1),mixedPalletTotal:mix.length*pallet}});const maps={PP:{},NDC:{}};lines.forEach(l=>{(l.supplier==='MIX'?['PP','NDC']:[l.supplier]).forEach(s=>{if(!maps[s])return;let k=l.code||'UNKNOWN';if(!maps[s][k])maps[s][k]={code:k,name:l.name||'',cycles:new Set(),qty:0,isDummy:isDummy(k,l.name)};maps[s][k].cycles.add(l.month+'-'+l.batch);maps[s][k].qty+=Number(l.qty||0);});});let top={};['PP','NDC'].forEach(s=>top[s]=Object.values(maps[s]).filter(x=>!x.isDummy).map(x=>({code:x.code,name:x.name,cycles:x.cycles.size,qty:Math.round(x.qty)})).sort((a,b)=>b.cycles-a.cycles||b.qty-a.qty).slice(0,10));return{monthly,top};}
+function parseWorkbook(wb){let lines=[];wb.SheetNames.filter(monthFromName).forEach(sn=>{const month=monthFromName(sn),rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});let batch=null,supplier=null;rows.slice(5).forEach(r=>{if(r[0]!=null&&r[0]!==''&&!isNaN(Number(r[0])))batch=Number(r[0]);if(r[4]!=null&&r[4]!=='')supplier=normSup(r[4]);const code=r[6],name=r[7],qty=Number(r[9]);if(month&&batch&&code&&!isNaN(qty))lines.push({month,batch,supplier,code:String(code),name:String(name||''),qty});});});return makeFromLines(lines)}
+const labelPlugin={id:'valueLabels',afterDatasetsDraw(chart){const{ctx}=chart;ctx.save();ctx.font='bold 11px Arial';ctx.fillStyle='#334155';ctx.textAlign='center';chart.data.datasets.forEach((d,di)=>{let meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach((el,i)=>{let v=d.data[i];if(v)ctx.fillText(v,el.x,el.y-6);});});ctx.restore();}};
+function addChart(el,type,data,options={}){let c=new Chart(el,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},...options},plugins:[labelPlugin]});charts.push(c)}
+function draw(payload){charts.forEach(c=>c.destroy());charts=[];lastPayload=payload;const data=payload.monthly,top=payload.top,total=data.reduce((s,x)=>s+x.totalCycles,0),pp=data.reduce((s,x)=>s+x.ppCyclesInclMixed,0),ndc=data.reduce((s,x)=>s+x.ndcCyclesInclMixed,0),target=Number(targetInput.value||1200),labels=data.map(x=>x.month);kTotal.textContent=total.toLocaleString();kPP.textContent=pp.toLocaleString();kNDC.textContent=ndc.toLocaleString();kTarget.textContent=((total/target)*100).toFixed(1)+'%';kTargetSub.textContent=total.toLocaleString()+' / '+target.toLocaleString()+' รอบ';addChart(cycleChart,'bar',{labels,datasets:[{label:'รอบรวม',data:data.map(x=>x.totalCycles),backgroundColor:'#2563eb',borderRadius:8}]},{plugins:{legend:{display:false}}});addChart(supplierChart,'bar',{labels,datasets:[{label:'PP ล้วน',data:data.map(x=>x.ppOnly),backgroundColor:'#10b981',stack:'a'},{label:'NDC ล้วน',data:data.map(x=>x.ndcOnly),backgroundColor:'#8b5cf6',stack:'a'},{label:'อบรวม',data:data.map(x=>x.mixed),backgroundColor:'#f59e0b',stack:'a'}]},{scales:{x:{stacked:true},y:{stacked:true}}});addChart(mixedChart,'line',{labels,datasets:[{label:'ตู้ที่อบรวม',data:data.map(x=>x.mixed),borderColor:'#f59e0b',backgroundColor:'#f59e0b'},{label:'PP pallet',data:data.map(x=>x.ppPalletMixed),borderColor:'#10b981',backgroundColor:'#10b981'},{label:'NDC pallet',data:data.map(x=>x.ndcPalletMixed),borderColor:'#8b5cf6',backgroundColor:'#8b5cf6'}]});let cum=0,tm=target/12;addChart(targetChart,'line',{labels,datasets:[{label:'Actual สะสม',data:data.map(x=>{cum+=x.totalCycles;return cum}),borderColor:'#2563eb',backgroundColor:'#2563eb'},{label:'Target สะสม',data:MONTHS.map((_,i)=>Math.round(tm*(i+1))),borderColor:'#ef4444',backgroundColor:'#ef4444',borderDash:[6,6]}]});renderTop('topPP',top.PP||[]);renderTop('topNDC',top.NDC||[]);summaryTable.innerHTML='<thead><tr><th>เดือน</th><th>รวม</th><th>PP</th><th>NDC</th><th>อบรวม</th><th>PP Pallet</th><th>NDC Pallet</th><th>Mixed Pallet</th></tr></thead><tbody>'+data.map(r=>`<tr><td>${r.month}</td><td>${r.totalCycles}</td><td>${r.ppCyclesInclMixed}</td><td>${r.ndcCyclesInclMixed}</td><td>${r.mixed}</td><td>${r.ppPalletMixed}</td><td>${r.ndcPalletMixed}</td><td>${r.mixedPalletTotal}</td></tr>`).join('')+'</tbody>';let best=data.reduce((b,x)=>x.totalCycles>b.totalCycles?x:b,data[0]),mixed=data.reduce((s,x)=>s+x.mixed,0),topPP=(top.PP&&top.PP[0])?top.PP[0].code:'-',topNDC=(top.NDC&&top.NDC[0])?top.NDC[0].code:'-';insightText.innerHTML=`จากข้อมูลปัจจุบัน มีรอบอบฆ่าเชื้อรวม <b>${total.toLocaleString()}</b> รอบ คิดเป็น <b>${((total/target)*100).toFixed(1)}%</b> ของเป้าหมายปี ${target.toLocaleString()} รอบ เดือนที่มีรอบสูงสุดคือ <b>${best.month}</b> จำนวน <b>${best.totalCycles}</b> รอบ มีตู้อบรวม PP+NDC ทั้งหมด <b>${mixed}</b> ตู้ โดย Top 10 ได้ตัด Dummy ออกแล้ว Top PP คือ <b>${topPP}</b> และ Top NDC คือ <b>${topNDC}</b>`;}
+function renderTop(id,items){document.getElementById(id).innerHTML=items.map((x,i)=>`<div class="topItem"><div class="rank">${i+1}</div><div><div class="code">${x.code}</div><div class="name">${x.name||'ไม่ระบุชื่อสินค้า'} | Qty ${Number(x.qty||0).toLocaleString()}</div></div><div><div class="num">${x.cycles}</div><div class="unit">รอบ</div></div></div>`).join('')||'<div class="name">ไม่มีข้อมูล</div>'}
+function resetDemo(){draw(makeFromLines(demoLines()));status.textContent='ใช้ข้อมูลตัวอย่างเริ่มต้น'}
+function redrawCurrent(){if(lastPayload)draw(lastPayload);else resetDemo()}function recalcFromStored(){if(lastLines)draw(makeFromLines(lastLines));else resetDemo()}
+file.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});draw(parseWorkbook(wb));status.textContent='อัปเดตจากไฟล์: '+f.name+' | '+new Date().toLocaleString('th-TH')});
+resetDemo();
+</script></body></html>
