@@ -20,16 +20,16 @@ h2{font-size:18px;margin:0 0 14px}.badge{border-radius:999px;background:#ecfeff;
 </style></head>
 <body><div class="wrap">
 <section class="hero"><h1>🏭 Sterile Factory Dashboard 2026</h1><p>Dashboard แบบเต็มสำหรับดูรอบอบฆ่าเชื้อ PP / NDC / Mixed Chamber, Top 10 Products โดยไม่รวม Dummy, Pallet Analysis, Target % และ Data Insight</p>
-<div class="toolbar"><label class="fileLabel">📤 Upload Excel <input id="file" type="file" accept=".xlsx,.xls"></label><button class="ghost" onclick="resetDemo()">Reset Demo</button><span class="status" id="status">ใช้ข้อมูลตัวอย่างเริ่มต้น</span></div>
+<div class="toolbar"><label class="fileLabel">📤 Upload Excel <input id="file" type="file" accept=".xlsx,.xls"></label><button class="ghost" onclick="resetDemo()">Reset Demo</button><button class="ghost" onclick="loadSavedData()">Load Saved Data</button><button class="ghost" onclick="clearSavedData()">Clear Saved Data</button><span class="status" id="status">ใช้ข้อมูลตัวอย่างเริ่มต้น</span></div>
 <div class="controls"><label>🎯 เป้าหมายรอบ/ปี <input class="control" id="targetInput" type="number" value="1200" min="1" onchange="redrawCurrent()"></label><label>📦 Pallet/ตู้ <input class="control" id="palletInput" type="number" value="6" min="1" onchange="recalcFromStored()"></label></div></section>
 <section class="grid4"><div class="card kpi"><div class="label">รอบอบฆ่าเชื้อทั้งหมด</div><div class="value" id="kTotal">0</div><div class="sub">Cycle / Chamber</div></div><div class="card kpi"><div class="label">รอบที่มีงาน PP</div><div class="value" id="kPP">0</div><div class="sub">รวม PP ล้วน + อบรวม</div></div><div class="card kpi"><div class="label">รอบที่มีงาน NDC</div><div class="value" id="kNDC">0</div><div class="sub">รวม NDC ล้วน + อบรวม</div></div><div class="card kpi"><div class="label">ความสำเร็จเทียบเป้าหมาย</div><div class="value" id="kTarget">0%</div><div class="sub" id="kTargetSub">Target</div></div></section>
-<div class="note">หมายเหตุ: ระบบจะตัดสินค้าที่มีรหัส/ชื่อเป็น <b>Dummy</b> ออกจาก Top 10 PP และ Top 10 NDC เพราะเป็นสินค้าที่ใส่เพื่อให้ครบตู้ ไม่ใช่สินค้าหลักในการวิเคราะห์ยอดนิยม</div>
+<div class="note">หมายเหตุ: ระบบจะตัดสินค้าที่มีรหัส/ชื่อเป็น <b>Dummy</b> ออกจาก Top 10 PP และ Top 10 NDC เพราะเป็นสินค้าที่ใส่เพื่อให้ครบตู้ ไม่ใช่สินค้าหลักในการวิเคราะห์ยอดนิยม<br><b>New:</b> เมื่อ Upload Excel แล้ว Dashboard จะบันทึกข้อมูลล่าสุดไว้ใน Browser อัตโนมัติ เปิดเว็บใหม่หรือ Refresh แล้วข้อมูลจะยังอยู่ในเครื่องเดิม</div>
 <section class="grid2"><div class="card"><h2>📊 1) รอบอบฆ่าเชื้อรายเดือน <span class="badge">Monthly Cycle</span></h2><div class="chartBox"><canvas id="cycleChart"></canvas></div></div><div class="card"><h2>🏷️ 2) PP / NDC / Mixed รายเดือน <span class="badge">Supplier Split</span></h2><div class="chartBox"><canvas id="supplierChart"></canvas></div></div><div class="card"><h2>🔀 3) ตู้อบรวมและพาเลทประมาณการ <span class="badge">Mixed Chamber</span></h2><div class="chartBox"><canvas id="mixedChart"></canvas></div></div><div class="card"><h2>🎯 4) เป้าหมายสะสมรายเดือน <span class="badge">Target Tracking</span></h2><div class="chartBox"><canvas id="targetChart"></canvas></div></div></section>
 <section class="grid2"><div class="card"><h2>🏆 Top 10 PP / TG <span class="badge">No Dummy</span></h2><div class="topList" id="topPP"></div><div class="small">ไม่รวม Dummy</div></div><div class="card"><h2>🏆 Top 10 NDC <span class="badge">No Dummy</span></h2><div class="topList" id="topNDC"></div><div class="small">ไม่รวม Dummy</div></div></section>
 <section class="grid2"><div class="card"><h2>📋 ตารางสรุปภาพรวมรายเดือน</h2><div class="tableWrap"><table id="summaryTable"></table></div></div><div class="card insight"><h2>💡 Data Insight</h2><p id="insightText"></p></div></section>
 </div>
 <script>
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let charts=[],lastLines=null,lastPayload=null;
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const STORAGE_KEY='sterileDashboardSavedLinesV3';const STORAGE_META='sterileDashboardSavedMetaV3';let charts=[],lastLines=null,lastPayload=null;
 function normSup(v){v=String(v||'').trim().toUpperCase();if(v==='TG'||v==='PP')return'PP';if(v==='NDC')return'NDC';return v||'UNKNOWN'}
 function monthFromName(n){return MONTHS.find(m=>String(n||'').trim().toLowerCase().startsWith(m.toLowerCase()))}
 function isDummy(code,name){return String(code||'').toUpperCase().includes('DUMMY')||String(name||'').toUpperCase().includes('DUMMY')}
@@ -40,8 +40,31 @@ const labelPlugin={id:'valueLabels',afterDatasetsDraw(chart){const{ctx}=chart;ct
 function addChart(el,type,data,options={}){let c=new Chart(el,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},...options},plugins:[labelPlugin]});charts.push(c)}
 function draw(payload){charts.forEach(c=>c.destroy());charts=[];lastPayload=payload;const data=payload.monthly,top=payload.top,total=data.reduce((s,x)=>s+x.totalCycles,0),pp=data.reduce((s,x)=>s+x.ppCyclesInclMixed,0),ndc=data.reduce((s,x)=>s+x.ndcCyclesInclMixed,0),target=Number(targetInput.value||1200),labels=data.map(x=>x.month);kTotal.textContent=total.toLocaleString();kPP.textContent=pp.toLocaleString();kNDC.textContent=ndc.toLocaleString();kTarget.textContent=((total/target)*100).toFixed(1)+'%';kTargetSub.textContent=total.toLocaleString()+' / '+target.toLocaleString()+' รอบ';addChart(cycleChart,'bar',{labels,datasets:[{label:'รอบรวม',data:data.map(x=>x.totalCycles),backgroundColor:'#2563eb',borderRadius:8}]},{plugins:{legend:{display:false}}});addChart(supplierChart,'bar',{labels,datasets:[{label:'PP ล้วน',data:data.map(x=>x.ppOnly),backgroundColor:'#10b981',stack:'a'},{label:'NDC ล้วน',data:data.map(x=>x.ndcOnly),backgroundColor:'#8b5cf6',stack:'a'},{label:'อบรวม',data:data.map(x=>x.mixed),backgroundColor:'#f59e0b',stack:'a'}]},{scales:{x:{stacked:true},y:{stacked:true}}});addChart(mixedChart,'line',{labels,datasets:[{label:'ตู้ที่อบรวม',data:data.map(x=>x.mixed),borderColor:'#f59e0b',backgroundColor:'#f59e0b'},{label:'PP pallet',data:data.map(x=>x.ppPalletMixed),borderColor:'#10b981',backgroundColor:'#10b981'},{label:'NDC pallet',data:data.map(x=>x.ndcPalletMixed),borderColor:'#8b5cf6',backgroundColor:'#8b5cf6'}]});let cum=0,tm=target/12;addChart(targetChart,'line',{labels,datasets:[{label:'Actual สะสม',data:data.map(x=>{cum+=x.totalCycles;return cum}),borderColor:'#2563eb',backgroundColor:'#2563eb'},{label:'Target สะสม',data:MONTHS.map((_,i)=>Math.round(tm*(i+1))),borderColor:'#ef4444',backgroundColor:'#ef4444',borderDash:[6,6]}]});renderTop('topPP',top.PP||[]);renderTop('topNDC',top.NDC||[]);summaryTable.innerHTML='<thead><tr><th>เดือน</th><th>รวม</th><th>PP</th><th>NDC</th><th>อบรวม</th><th>PP Pallet</th><th>NDC Pallet</th><th>Mixed Pallet</th></tr></thead><tbody>'+data.map(r=>`<tr><td>${r.month}</td><td>${r.totalCycles}</td><td>${r.ppCyclesInclMixed}</td><td>${r.ndcCyclesInclMixed}</td><td>${r.mixed}</td><td>${r.ppPalletMixed}</td><td>${r.ndcPalletMixed}</td><td>${r.mixedPalletTotal}</td></tr>`).join('')+'</tbody>';let best=data.reduce((b,x)=>x.totalCycles>b.totalCycles?x:b,data[0]),mixed=data.reduce((s,x)=>s+x.mixed,0),topPP=(top.PP&&top.PP[0])?top.PP[0].code:'-',topNDC=(top.NDC&&top.NDC[0])?top.NDC[0].code:'-';insightText.innerHTML=`จากข้อมูลปัจจุบัน มีรอบอบฆ่าเชื้อรวม <b>${total.toLocaleString()}</b> รอบ คิดเป็น <b>${((total/target)*100).toFixed(1)}%</b> ของเป้าหมายปี ${target.toLocaleString()} รอบ เดือนที่มีรอบสูงสุดคือ <b>${best.month}</b> จำนวน <b>${best.totalCycles}</b> รอบ มีตู้อบรวม PP+NDC ทั้งหมด <b>${mixed}</b> ตู้ โดย Top 10 ได้ตัด Dummy ออกแล้ว Top PP คือ <b>${topPP}</b> และ Top NDC คือ <b>${topNDC}</b>`;}
 function renderTop(id,items){document.getElementById(id).innerHTML=items.map((x,i)=>`<div class="topItem"><div class="rank">${i+1}</div><div><div class="code">${x.code}</div><div class="name">${x.name||'ไม่ระบุชื่อสินค้า'} | Qty ${Number(x.qty||0).toLocaleString()}</div></div><div><div class="num">${x.cycles}</div><div class="unit">รอบ</div></div></div>`).join('')||'<div class="name">ไม่มีข้อมูล</div>'}
+function saveCurrentData(metaText){
+ if(!lastLines||!lastLines.length){status.textContent='ยังไม่มีข้อมูลให้บันทึก';return;}
+ try{
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(lastLines));
+  localStorage.setItem(STORAGE_META,JSON.stringify({savedAt:new Date().toLocaleString('th-TH'),note:metaText||'Saved from uploaded Excel'}));
+  status.textContent='บันทึกข้อมูลล่าสุดแล้ว | '+new Date().toLocaleString('th-TH');
+ }catch(e){status.textContent='บันทึกไม่ได้: Browser storage เต็มหรือถูกปิด';}
+}
+function loadSavedData(){
+ try{
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){status.textContent='ยังไม่มีข้อมูลที่บันทึกไว้ในเครื่องนี้';resetDemo();return;}
+  const lines=JSON.parse(raw);
+  draw(makeFromLines(lines));
+  const meta=JSON.parse(localStorage.getItem(STORAGE_META)||'{}');
+  status.textContent='โหลดข้อมูลที่บันทึกไว้แล้ว | '+(meta.savedAt||'ไม่ทราบเวลา');
+ }catch(e){status.textContent='โหลดข้อมูลที่บันทึกไว้ไม่ได้';resetDemo();}
+}
+function clearSavedData(){
+ localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STORAGE_META);
+ status.textContent='ล้างข้อมูลที่บันทึกไว้แล้ว';
+ resetDemo();
+}
 function resetDemo(){draw(makeFromLines(demoLines()));status.textContent='ใช้ข้อมูลตัวอย่างเริ่มต้น'}
-function redrawCurrent(){if(lastPayload)draw(lastPayload);else resetDemo()}function recalcFromStored(){if(lastLines)draw(makeFromLines(lastLines));else resetDemo()}
-file.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});draw(parseWorkbook(wb));status.textContent='อัปเดตจากไฟล์: '+f.name+' | '+new Date().toLocaleString('th-TH')});
-resetDemo();
+function redrawCurrent(){if(lastPayload){draw(lastPayload);saveCurrentData('Settings updated')}else resetDemo()}function recalcFromStored(){if(lastLines){draw(makeFromLines(lastLines));saveCurrentData('Pallet setting updated')}else resetDemo()}
+file.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});draw(parseWorkbook(wb));saveCurrentData('Uploaded: '+f.name);status.textContent='อัปเดตและบันทึกจากไฟล์: '+f.name+' | '+new Date().toLocaleString('th-TH')});
+if(localStorage.getItem(STORAGE_KEY)){loadSavedData();}else{resetDemo();}
 </script></body></html>
